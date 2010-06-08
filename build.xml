@@ -1,0 +1,113 @@
+<project name="jsquant" default="war" basedir=".">
+<!--
+Usage:
+	ant -Dlib.compile=/usr/share/tomcat6/lib -Dtomcat.home=/home/tomcat
+	ant -Dtomcat.home=/home/tomcat deploy 
+	# on Ubuntu check /etc/tomcat6/Catalina/localhost/*
+-->
+
+	<property environment="env" />
+
+	<property name="tomcat.home" value="${env.CATALINA_HOME}" />
+
+	<property name="app.path" value="" />
+
+	<property name="project.name" value="jsquant" />
+	<property name="project.version" value="0.1" />
+
+	<property name="basedir" value="." />
+	<property name="backup.dir" value="../backups" />
+
+	<property name="src.java" value="${basedir}/src" />
+	<property name="src.webapp" value="${basedir}/WebContent" />
+	<property name="lib.compile" value="${basedir}/lib" />
+
+	<property name="target" value="${basedir}/target" />
+	<property name="target.webapp" value="${target}/${project.name}" />
+	<property name="target.classes" value="${target.webapp}/WEB-INF/classes" />
+
+	<property name="deploy.dir" value="${tomcat.home}/webapps/jsquant" />
+
+	<target name="echo:properties">
+		<echoproperties />
+	</target>
+
+	<target name="echo:javaProperties">
+		<echo message="Java Runtime Environment version: ${java.version} ${java.vendor} ${java.vendor.url}" />
+		<echo message="Java installation directory: ${java.home}" />
+		<echo message="Java Virtual Machine specification: ${java.vm.specification.version} ${java.vm.specification.vendor} ${java.vm.specification.name}" />
+		<echo message="Java Virtual Machine implementation: ${java.vm.version} ${java.vm.vendor} ${java.vm.name}" />
+		<echo message="Java Runtime Environment specification: ${java.specification.version} ${java.specification.vendor} ${java.specification.name}" />
+		<echo message="Java class format version number: ${java.class.version}" />
+		<echo message="Java class path: ${java.class.path}" />
+		<echo message="List of paths to search when loading libraries: ${java.library.path}" />
+		<echo message="Path of extension directory or directories: ${java.ext.dirs}" />
+		<echo message="Default temp file path: ${java.io.tmpdir}" />
+		<echo message="Operating system name: ${os.name} ${os.arch} ${os.version}" />
+	</target>
+
+	<!-- BUILD TARGETS -->
+
+	<target name="clean">
+		<delete dir="${target}" />
+	</target>
+
+	<target name="java:compile" depends="echo:javaProperties">
+		<mkdir dir="${target.classes}" />
+		<javac srcdir="${src.java}" destdir="${target.classes}" debug="true" deprecation="true" optimize="true" encoding="UTF-8">
+			<classpath>
+				<fileset dir="${lib.compile}" includes="*.jar" />
+				<fileset dir="${src.webapp}/WEB-INF/lib" includes="*.jar" />
+			</classpath>
+		</javac>
+		<copy todir="${target.classes}">
+			<fileset dir="${src.java}" />
+		</copy>
+	</target>
+
+	<target name="war:webapp" depends="java:compile">
+		<copy todir="${target.webapp}">
+			<fileset dir="${src.webapp}" />
+		</copy>
+		<!--
+		<delete includeemptydirs="true">
+			<fileset dir="${target.webapp}/js/dijit" includes="**/*" />
+			<fileset dir="${target.webapp}/js/dojo" includes="**/*" />
+			<fileset dir="${target.webapp}/js/dojox" includes="**/*" />
+			<fileset dir="${target.webapp}/js/util" includes="**/*" />
+			<fileset dir="${target.webapp}/js/flot/examples" includes="**/*" />
+		</delete>
+		-->
+	</target>
+
+	<target name="war" depends="war:webapp">
+		<jar jarfile="${target}/${project.name}-${project.version}.war" basedir="${target.webapp}" />
+	</target>
+
+	<!-- DEPLOY TARGETS -->
+
+	<target name="deploy" depends="war:webapp">
+		<echo>Copying from ${target.webapp} to ${deploy.dir}...</echo>
+		<copy todir="${deploy.dir}">
+			<fileset dir="${target.webapp}" />
+		</copy>
+	</target>
+
+	<target name="cleanDeployDir">
+		<delete includeemptydirs="true">
+			<fileset dir="${deploy.dir}" includes="**/*" />
+		</delete>
+	</target>
+	
+	<target name="cleanDeploy" depends="cleanDeployDir,deploy">
+	</target>
+
+	<target name="backup">
+		<tstamp />
+		<mkdir dir="${backup.dir}" />
+		<tar tarfile="${backup.dir}/${project.name}_${DSTAMP}${TSTAMP}.tar" basedir="." includes="**" />
+		<gzip src="${backup.dir}/${project.name}_${DSTAMP}${TSTAMP}.tar" zipfile="${backup.dir}/${project.name}_${DSTAMP}${TSTAMP}.tar.gz" />
+		<delete file="${backup.dir}/${project.name}_${DSTAMP}${TSTAMP}.tar" />
+	</target>
+
+</project>
