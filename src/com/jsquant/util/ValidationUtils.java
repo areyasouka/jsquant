@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package com.jsquant;
+package com.jsquant.util;
 
 import javax.servlet.ServletException;
 
@@ -24,6 +24,8 @@ public class ValidationUtils {
 	}
 
 	public static void validateSymbol(String s) throws ServletException {
+		if (s == null || s.length() < 2 || s.length() > 15)
+			throw new ServletException("Invalid Symbol");
 		for (int i=1; i<s.length(); i++) {
 			char c = s.charAt(i);
 			if (!(Character.isLetterOrDigit(c) || c=='_' || c=='^' || c=='.'))
