@@ -16,7 +16,8 @@ dependencies = {
                        "dojox.widget.PlaceholderMenuItem",
                        "dojox.analytics.Urchin",
                        "dojox.data.CsvStore",
-                       "dojox.grid.DataGrid"
+                       "dojox.grid.DataGrid",
+                       "dojox.lang.functional"
         ]
         }
     ],

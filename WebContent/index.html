@@ -14,6 +14,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+/*
+ * Begin Yahoo Web Services Attribution Snippet
+ * http://developer.yahoo.com - Web Services by Yahoo!
+ * End Yahoo Web Services Attribution Snippet
+ */
 -->
 	<title>Javascript Quant: Trend Following Algorithm Example</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -21,16 +27,18 @@
 	<link rel="icon" href="images/favicon16x16.ico" type="image/x-icon">
 	<link rel="shortcut icon" href="images/favicon16x16.ico" type="image/x-icon">
 	<style type="text/css">
-		/*
+		/* USE REMOTE: */
 		@import "http://ajax.googleapis.com/ajax/libs/dojo/1.4.3/dijit/themes/tundra/tundra.css";
 		@import "http://ajax.googleapis.com/ajax/libs/dojo/1.4.3/dojo/resources/dojo.css";
 		@import "http://ajax.googleapis.com/ajax/libs/dojo/1.4.3/dojox/grid/resources/Grid.css";
 		@import "http://ajax.googleapis.com/ajax/libs/dojo/1.4.3/dojox/grid/resources/tundraGrid.css";
-		*/
+		/* USE LOCAL: */
+		/*
 		@import "js/release/dojo/dojo/resources/dojo.css";
 		@import "js/release/dojo/dojox/grid/resources/Grid.css";
 		@import "js/release/dojo/dojox/grid/resources/tundraGrid.css";
 		@import "js/release/dojo/dijit/themes/tundra/tundra.css";
+		*/
 
 		html, body, #main {
 			width: 100%;
@@ -462,20 +470,20 @@ Actual Functions to Apply Follow:
 	</div>
 </body>
 
+<!-- USE REMOTE: -->
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/dojo/1.4.3/dojo/dojo.xd.js" djConfig="parseOnLoad: true, isDebug: false"></script>
+<!-- USE LOCAL: -->
+<!--<script type="text/javascript" src="js/release/dojo/dojo/dojo.js" djConfig="parseOnLoad: true, isDebug: false"></script>-->
+<!--<script type="text/javascript" src="js/release/dojo/dojo/jsquant-all.js"></script>-->
 
-<!--<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/dojo/1.4.3/dojo/dojo.xd.js" djConfig="parseOnLoad: true, isDebug: true"></script>-->
-<!-- Packed set of Dojo stuff: 
-		uncomment above and "dojo.require"s below to use full source version -->
-<script type="text/javascript" src="js/release/dojo/dojo/dojo.js" djConfig="parseOnLoad: true, isDebug: false"></script>
-<script type="text/javascript" src="js/release/dojo/dojo/jsquant-all.js"></script>
-
+<!-- USE LOCAL: -->
 <!--[if IE]><script language="javascript" type="text/javascript" src="js/flot/excanvas.min.js"></script><![endif]-->
 <script language="javascript" type="text/javascript" src="js/flot/jquery.min.js"></script>
 <script language="javascript" type="text/javascript" src="js/flot/jquery.flot.min.js"></script>
 <script language="javascript" type="text/javascript" src="js/flot/jquery.flot.selection.min.js"></script>
 
 <script>
-/*
+// USE REMOTE:
 dojo.require("dojo.DeferredList");
 dojo.require("dojo.number");
 dojo.require("dojo.date.locale");
@@ -490,8 +498,9 @@ dojo.require("dojox.widget.PlaceholderMenuItem");
 dojo.require("dojox.analytics.Urchin");
 dojo.require("dojox.data.CsvStore");
 dojo.require("dojox.grid.DataGrid");
+dojo.require("dojox.lang.functional");
 dojo.require("dojo.parser");
-*/
+
 // Globals
 var today = new Date();
 // Enums
@@ -542,10 +551,8 @@ var addToPortfolio = function(symData, calcCols, graphCols, resultCols) {
 
 	tabs.addChild(bcTab);
 
-	// Local Proxy for Yahoo Finance: 
-	//		http://ichart.finance.yahoo.com/table.csv?a=00&b=01&c=2005&d=05&e=03&f=2008&g=d&s=GOOG&ignore=.csv
-	var dataUrl = "jsquant/YahooFinanceProxy?"
-		+"a="+encodeURIComponent(lpad(symData.fromDate.getMonth(),2,"0"))
+	// Example: http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20csv%20where%20url%3D'http%3A%2F%2Fichart.finance.yahoo.com%2Ftable.csv%3Fa%3D00%26b%3D01%26c%3D2010%26d%3D05%26e%3D03%26f%3D2010%26g%3Dd%26s%3DGOOG%26ignore%3D.csv'&format=json&diagnostics=true&callback=cbfunc
+	var yahooFinanceQuery = "?a="+encodeURIComponent(lpad(symData.fromDate.getMonth(),2,"0"))
 		+"&b="+encodeURIComponent(lpad(symData.fromDate.getDate(),2,"0"))
 		+"&c="+encodeURIComponent(symData.fromDate.getFullYear())
 		+"&d="+encodeURIComponent(lpad(symData.toDate.getMonth(),2,"0"))
@@ -554,7 +561,15 @@ var addToPortfolio = function(symData, calcCols, graphCols, resultCols) {
 		+"&g=d" // "d"ay "w"eek "m"onth resolution
 		+"&s="+encodeURIComponent(symData.symbol)
 		+"&ignore=.csv";
-	var store = new jsquant.CsvStore({url:dataUrl, calcCols:calcCols});
+
+	// USE LOCAL: local java proxy to CSV (requires local java webapp)
+	//var localProxyDataUrl = "jsquant/YahooFinanceProxy"+yahooFinanceQuery;
+	//var store = new jsquant.CsvYqlStore({url:localProxyDataUrl, calcCols:calcCols});
+	// USE REMOTE: YQL JSON proxy (all javascript) http://developer.yahoo.com/yql/
+	var yahooFinanceDataUrl = "http://ichart.finance.yahoo.com/table.csv"+yahooFinanceQuery;
+	var yqlQuery = "select * from csv where url = '"+yahooFinanceDataUrl+"'";
+	var store = new jsquant.CsvYqlStore({yqlQuery:yqlQuery, calcCols:calcCols});
+
 	store.fetch({
 		query: {Date:"*"},
 		sort: [{attribute: "Date", descending: false}],
@@ -737,15 +752,45 @@ dojo.addOnLoad(function() {
 			dojo.attr(op, "selected", "selected");
 	}
 
-	// Child of CsvStore that calcs new columns from calcCols arg
-	dojo.declare("jsquant.CsvStore", dojox.data.CsvStore, {
+	// Child of CsvStore that calculates and normalizes data using functions in calcCols arg
+	// also supports reading from YQL JSONified CSV data source in addition to regular CSV URL
+	// Example:
+	// 		var store = new jsquant.CsvYqlStore({url:"jsquant/YahooFinanceProxy"+yahooFinanceQuery, calcCols:calcCols});
+	// 		var store = new jsquant.CsvYqlStore({yqlQuery:"select * from csv where url = 'http://finance...'", calcCols:calcCols});
+	dojo.declare("jsquant.CsvYqlStore", dojox.data.CsvStore, {
 		_calcCols: [],
+		_jsonpArgs: {
+			url: "http://query.yahooapis.com/v1/public/yql",
+			jsonp: "callback",
+			content: {
+				// q: "select * from csv where url = 'http://finance...'",
+				format: "json",
+				diagnostics: true
+			},
+		},
+		
 		
 		constructor: function(args) {
 			dojo.mixin(this, args);
 			this._calcCols = args.calcCols;
+			if (args.yqlQuery)
+				this._jsonpArgs.content.q = args.yqlQuery;
 		},
 
+		_calculateValues: function() {
+			dojo.forEach(this._calcCols, function(item) {
+				if (item.calculateValues) {
+					dojo.forEach(item.names, function(name) {
+						this._attributes.push(name);
+						this._attributeIndexes[name] = this._attributes.length-1;
+					}, this);
+					this._dataArray = item.calculateValues(this._dataArray);
+				} else if (item.updateValues) {
+					this._dataArray = item.updateValues(this._dataArray);
+				}
+			}, this);
+		},
+		
 		// override parsing to add calculated columns
 		_getArrayOfArraysFromCsvFileContents: function(/* string */ csvFileContents){
 			// summary:
@@ -761,20 +806,218 @@ dojo.addOnLoad(function() {
 			//		And this._attributeIndexes will be set to:
 			//			{ "Title":0, "Year":1, "Producer":2 }
 			this.inherited(arguments);
+			this._calculateValues();
+		},
+		
+		_processJsonpData: function(/* JSON */ data){
+			// summary:
+			//		Function for processing the YQL JSON data.
+			//		Similar to _processData in parent.
+			// data: JSON
+			//		The JSON CSV row data in YQL query result format.
+			// tags:
+			//		private
+			var rows = data.query.results.row;
+			var oUtil = dojox.lang.functional;
 
-			dojo.forEach(this._calcCols, function(item) {
-				if (item.calculateValues) {
-					dojo.forEach(item.names, function(name) {
-						this._attributes.push(name);
-						this._attributeIndexes[name] = this._attributes.length-1;
-					}, this);
-					this._dataArray = item.calculateValues(this._dataArray);
-				} else if (item.updateValues) {
-					this._dataArray = item.updateValues(this._dataArray);
-				}
+			this._dataArray = [];
+			for (var i=1; i<rows.length; i++) 
+				this._dataArray.push(oUtil.values(rows[i]));
+			this._attributes = oUtil.values(rows[0]);
+			this._attributeIndexes = {};
+			dojo.forEach(this._attributes, function(item, index) {
+				this._attributeIndexes[item] = index; 
 			}, this);
+			this._calculateValues();
+			this._arrayOfAllItems = [];
+
+			//Check that the specified Identifier is actually a column title, if provided.
+			if(this.identifier){
+				if(this._attributeIndexes[this.identifier] === undefined){
+					throw new Error(this.declaredClass + ": Identity specified is not a column header in the data set.");
+				}
+			}
+
+			for(var i=0; i<this._dataArray.length; i++){
+				var id = i;
+				//Associate the identifier to a row in this case
+				//for o(1) lookup.
+				if(this.identifier){
+					var iData = this._dataArray[i];
+					id = iData[this._attributeIndexes[this.identifier]];
+					this._idMap[id] = i;
+				}
+				this._arrayOfAllItems.push(this._createItemFromIdentity(id));
+			}
+			this._loadFinished = true;
+			this._loadInProgress = false;
+		},
+		
+		// The dojo.data.api.Read.fetch() function is implemented as
+		// a mixin from dojo.data.util.simpleFetch.
+		// That mixin requires us to define _fetchItems().
+		_fetchItems: function(	/* Object */ keywordArgs, 
+								/* Function */ findCallback, 
+								/* Function */ errorCallback){
+			// summary: 
+			//		See dojo.data.util.simpleFetch.fetch()
+			// tags:
+			//		protected
+			var self = this;
+			var filter = function(requestArgs, arrayOfAllItems){
+				var items = null;
+				if(requestArgs.query){
+					var key, value;
+					items = [];
+					var ignoreCase = requestArgs.queryOptions ? requestArgs.queryOptions.ignoreCase : false; 
+
+					//See if there are any string values that can be regexp parsed first to avoid multiple regexp gens on the
+					//same value for each item examined.  Much more efficient.
+					var regexpList = {};
+					for(key in requestArgs.query){
+						value = requestArgs.query[key];
+						if(typeof value === "string"){
+							regexpList[key] = dojo.data.util.filter.patternToRegExp(value, ignoreCase);
+						}
+					}
+
+					for(var i = 0; i < arrayOfAllItems.length; ++i){
+						var match = true;
+						var candidateItem = arrayOfAllItems[i];
+						for(key in requestArgs.query){
+							value = requestArgs.query[key];
+							if(!self._containsValue(candidateItem, key, value, regexpList[key])){
+								match = false;
+							}
+						}
+						if(match){
+							items.push(candidateItem);
+						}
+					}
+				}else{
+					// We want a copy to pass back in case the parent wishes to sort the array.  We shouldn't allow resort 
+					// of the internal list so that multiple callers can get lists and sort without affecting each other.
+					items = arrayOfAllItems.slice(0,arrayOfAllItems.length); 
+					
+				}
+				findCallback(items, requestArgs);
+			};
+
+			if(this._loadFinished){
+				filter(keywordArgs, this._arrayOfAllItems);
+			}else{
+				// START JSQUANT ADDITION, similar to below, but using dojo.io.script.get for XD
+				if(this._jsonpArgs.content.q){
+					if(this._loadInProgress){
+						this._queuedFetches.push({args: keywordArgs, filter: filter});
+					}else{
+						this._loadInProgress = true;
+						var getArgs = this._jsonpArgs;
+						getArgs.load = function(data){
+							try{
+								self._processJsonpData(data);
+								filter(keywordArgs, self._arrayOfAllItems);
+								self._handleQueuedFetches();
+							}catch(e){
+								errorCallback(e, keywordArgs);
+							}
+						};
+						getArgs.error = function(error){
+							self._loadInProgress = false;
+							if(errorCallback){
+								errorCallback(error, keywordArgs);
+							}else{
+								throw error;
+							}
+						};
+						// TODO: test abort
+						var getHandler = dojo.io.script.get(getArgs);
+						var oldAbort = null;
+						if(keywordArgs.abort){
+							oldAbort = keywordArgs.abort;
+						}
+						keywordArgs.abort = function(){
+							var df = getHandler;
+							if(df && df.fired === -1){
+								df.cancel();
+								df = null;
+							}
+							if(oldAbort){
+								oldAbort.call(keywordArgs);
+							}
+						};
+					}
+				// END JSQUANT ADDITION ----------------------------------------------
+				} else if(this.url !== ""){
+					//If fetches come in before the loading has finished, but while
+					//a load is in progress, we have to defer the fetching to be 
+					//invoked in the callback.
+					if(this._loadInProgress){
+						this._queuedFetches.push({args: keywordArgs, filter: filter});
+					}else{
+						this._loadInProgress = true;
+						var getArgs = {
+								url: self.url, 
+								handleAs: "text",
+								preventCache: self.urlPreventCache
+							};
+						var getHandler = dojo.xhrGet(getArgs);
+						getHandler.addCallback(function(data){
+							try{
+								self._processData(data);
+								filter(keywordArgs, self._arrayOfAllItems);
+								self._handleQueuedFetches();
+							}catch(e){
+								errorCallback(e, keywordArgs);
+							}
+						});
+						getHandler.addErrback(function(error){
+							self._loadInProgress = false;
+							if(errorCallback){
+								errorCallback(error, keywordArgs);
+							}else{
+								throw error;
+							}
+						});
+						//Wire up the cancel to abort of the request
+						//This call cancel on the deferred if it hasn't been called
+						//yet and then will chain to the simple abort of the
+						//simpleFetch keywordArgs
+						var oldAbort = null;
+						if(keywordArgs.abort){
+							oldAbort = keywordArgs.abort;
+						}
+						keywordArgs.abort = function(){
+							var df = getHandler;
+							if(df && df.fired === -1){
+								df.cancel();
+								df = null;
+							}
+							if(oldAbort){
+								oldAbort.call(keywordArgs);
+							}
+						};
+					}
+				}else if(this._csvData){
+					try{
+						this._processData(this._csvData);
+						this._csvData = null;
+						filter(keywordArgs, this._arrayOfAllItems);
+					}catch(e){
+						errorCallback(e, keywordArgs);
+					}
+				}else{
+					var error = new Error(this.declaredClass + ": No CSV source data was provided as either URL or String data input.");
+					if(errorCallback){
+						errorCallback(error, keywordArgs);
+					}else{
+						throw error;
+					}
+				}
+			}
 		}
 	});
+
 	
 	dojo.connect(dojo.byId("portfolioForm"), "onsubmit", updateAll);
 	dojo.connect(dijit.byId("settingsDialog"), "execute", function() {
