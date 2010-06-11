@@ -756,6 +756,8 @@ dojo.addOnLoad(function() {
 	// 		var store = new jsquant.CsvYqlStore({url:"jsquant/YahooFinanceProxy"+yahooFinanceQuery, calcCols:calcCols});
 	// 		var store = new jsquant.CsvYqlStore({yqlQuery:"select * from csv where url = 'http://finance...'", calcCols:calcCols});
 	dojo.declare("jsquant.CsvYqlStore", dojox.data.CsvStore, {
+		// Portions of overridden methods below Copyright (c) 2010, The Dojo Foundation
+		// http://archive.dojotoolkit.org/nightly/dojotoolkit/dojox/LICENSE
 		_calcCols: [],
 		_jsonpArgs: {
 			url: "http://query.yahooapis.com/v1/public/yql",
