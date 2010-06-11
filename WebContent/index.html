@@ -131,10 +131,6 @@
 		.adsense,.addthis_toolbox {
 			margin-left: 15px;
 		}
-		.spinner {
-			background: url('images/spinner.gif') 5px center no-repeat; 
-			padding:5px 5px 5px 25px;
-		}
 		#loader {
 			padding: 0;
 			margin: 0;
@@ -151,6 +147,7 @@
 			position: relative;
 			left: 0;
 			top: 0;
+			padding:10px 25px;
 		}
 		/* From http://ejohn.org/blog/retweet/ */
 		a.retweet { font: 12px Helvetica,Arial; color: #000; text-decoration: none; border: 0px; }
@@ -158,7 +155,7 @@
 	</style>
 </head>
 <body class="tundra">
-	<div id="loader" class="loader"><div id="loaderInner" class="spinner">Loading...</div></div>
+	<div id="loader" class="loader"><div id="loaderInner" class="dijitContentPaneLoading">Loading...</div></div>
 	<div id="main" dojoType="dijit.layout.BorderContainer" design="headline" liveSplitters="false" persist="true">
 		<div id="layoutHeader" dojoType="dijit.layout.ContentPane" region="top" role="banner">
 			<span id="logo" title="Javascript Quant Example">JsQuant</span>
@@ -424,7 +421,7 @@ Actual Functions to Apply Follow:
 				<thead>
 				</thead>
 				<tbody>
-				<tr><td><div class="spinner">Loading...</div></td></tr>
+				<tr><td><div class="dijitContentPaneLoading">Loading...</div></td></tr>
 				</tbody>
 			</table>
 
@@ -502,6 +499,7 @@ dojo.require("dojox.lang.functional");
 dojo.require("dojo.parser");
 
 // Globals
+var yahooApplicationId = "JzXVLI38";
 var today = new Date();
 // Enums
 var OrderAction = {
@@ -568,7 +566,7 @@ var addToPortfolio = function(symData, calcCols, graphCols, resultCols) {
 	// USE REMOTE: YQL JSON proxy (all javascript) http://developer.yahoo.com/yql/
 	var yahooFinanceDataUrl = "http://ichart.finance.yahoo.com/table.csv"+yahooFinanceQuery;
 	var yqlQuery = "select * from csv where url = '"+yahooFinanceDataUrl+"'";
-	var store = new jsquant.CsvYqlStore({yqlQuery:yqlQuery, calcCols:calcCols});
+	var store = new jsquant.CsvYqlStore({yqlQuery:yqlQuery, yahooApplicationId:yahooApplicationId, calcCols:calcCols});
 
 	store.fetch({
 		query: {Date:"*"},
@@ -775,6 +773,8 @@ dojo.addOnLoad(function() {
 			this._calcCols = args.calcCols;
 			if (args.yqlQuery)
 				this._jsonpArgs.content.q = args.yqlQuery;
+			if (args.yahooApplicationId)
+				this._jsonpArgs.content.applicationId = args.yahooApplicationId;
 		},
 
 		_calculateValues: function() {
