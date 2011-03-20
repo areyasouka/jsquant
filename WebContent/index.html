@@ -22,10 +22,10 @@
 	<link rel="shortcut icon" href="images/favicon16x16.ico" type="image/x-icon">
 	<style type="text/css">
 		/* USE REMOTE: */
-		@import "http://ajax.googleapis.com/ajax/libs/dojo/1.5/dijit/themes/claro/claro.css";
-		@import "http://ajax.googleapis.com/ajax/libs/dojo/1.5/dojo/resources/dojo.css";
-		@import "http://ajax.googleapis.com/ajax/libs/dojo/1.5/dojox/grid/resources/Grid.css";
-		@import "http://ajax.googleapis.com/ajax/libs/dojo/1.5/dojox/grid/resources/claroGrid.css";
+		@import "http://ajax.googleapis.com/ajax/libs/dojo/1.6/dijit/themes/claro/claro.css";
+		@import "http://ajax.googleapis.com/ajax/libs/dojo/1.6/dojo/resources/dojo.css";
+		@import "http://ajax.googleapis.com/ajax/libs/dojo/1.6/dojox/grid/resources/Grid.css";
+		@import "http://ajax.googleapis.com/ajax/libs/dojo/1.6/dojox/grid/resources/claroGrid.css";
 		/* USE LOCAL: */
 		/*
 		@import "js/release/dojo/dojo/resources/dojo.css";
@@ -33,6 +33,10 @@
 		@import "js/release/dojo/dojox/grid/resources/claroGrid.css";
 		@import "js/release/dojo/dijit/themes/claro/claro.css";
 		*/
+		.claro .dojoxGridSortNode {
+			background: none;
+			border: none;
+		}
 
 		html, body, #main {
 			width: 100%;
@@ -150,8 +154,8 @@
 </head>
 <body class="claro">
 	<div id="loader" class="loader"><div id="loaderInner" class="dijitContentPaneLoading">Loading...</div></div>
-	<div id="main" dojoType="dijit.layout.BorderContainer" design="headline" liveSplitters="false" persist="true">
-		<div id="layoutHeader" dojoType="dijit.layout.ContentPane" region="top" role="banner">
+	<div id="main" data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="design:'headline', liveSplitters:false, persist:true">
+		<div id="layoutHeader" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region:'top', role:'banner'">
 			<span id="logo" title="Javascript Quant Example">JsQuant</span>
 			<span id="logoSubtext">100% Javascript Quant: Trend Following Algorithm Example (<a href="http://code.google.com/p/jsquant/">download source</a>)</span>
 			
@@ -167,9 +171,9 @@
 				<select id="fromMonthSelect"></select>
 				
 				<span class="label">Using</span>
-				<span dojoType="dijit.form.DropDownButton">
+				<span data-dojo-type="dijit.form.DropDownButton">
 					<span>Algorithm...</span>
-					<div id="settingsDialog" dojoType="dijit.TooltipDialog" title="Preferences" style="display:none;">
+					<div id="settingsDialog" data-dojo-type="dijit.TooltipDialog" style="display:none;">
 						<div class="label">Add Calculated Columns to Yahoo Finance CSV</div> 
 						<textarea id="calcColsText" rows="10" wrap="off">
 /* 
@@ -398,7 +402,7 @@ Actual Functions to Apply Follow:
 						<div class="label">Result Columns</div> 
 						<input id="resultColsText" type="text" value="19,20" />
 						<div class="buttons">
-							<button type="submit" dojoType="dijit.form.Button">Update</button>
+							<button data-dojo-props="type:'submit'" data-dojo-type="dijit.form.Button">Update</button>
 						</div>
 					</div>
 				</span>
@@ -407,7 +411,7 @@ Actual Functions to Apply Follow:
 			</form>
 		</div>
 
-		<div id="layoutSidebar" dojoType="dijit.layout.ContentPane" region="left" role="navigation" splitter="true">
+		<div id="layoutSidebar" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region:'left', role:'navigation', splitter:true">
 			<div id="dateRange"></div>
 			<div class="subtext" style="margin: 10px 20px 20px 20px">Balance after trading period using algorithm...</div>
 			
@@ -449,10 +453,10 @@ Actual Functions to Apply Follow:
 			</div>
 		</div>
 
-		<div id="portfolioTabs" dojoType="dijit.layout.TabContainer" region="center" role="main">
+		<div id="portfolioTabs" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region:'center', role:'main'">
 		</div>
 
-		<div id="layoutFooter" dojoType="dijit.layout.ContentPane" region="bottom">
+		<div id="layoutFooter" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region:'bottom'">
 			Powered by 
 			<!-- Begin Yahoo Web Services HTML Attribution Snippet -->
 			<a href="http://developer.yahoo.com/">Web Services by Yahoo!</a>
@@ -465,9 +469,9 @@ Actual Functions to Apply Follow:
 </body>
 
 <!-- USE REMOTE: -->
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/dojo/1.5/dojo/dojo.xd.js" djConfig="parseOnLoad: true, isDebug: false"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/dojo/1.6/dojo/dojo.xd.js" data-dojo-config="parseOnLoad: true, isDebug: false"></script>
 <!-- USE LOCAL: -->
-<!--<script type="text/javascript" src="js/release/dojo/dojo/dojo.js" djConfig="parseOnLoad: true, isDebug: false"></script>-->
+<!--<script type="text/javascript" src="js/release/dojo/dojo/dojo.js" data-dojo-config="parseOnLoad: true, isDebug: false"></script>-->
 <!--<script type="text/javascript" src="js/release/dojo/dojo/jsquant-all.js"></script>-->
 
 <!-- USE LOCAL: -->
