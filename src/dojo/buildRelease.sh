@@ -49,11 +49,12 @@ rm -rf $jqReleaseDir/dojo/dojox/*
 mv $jqReleaseDir/dojo/dojox-grid $jqReleaseDir/dojo/dojox/grid
 #mv $jqReleaseDir/dojo/dojox-image $jqReleaseDir/dojo/dojox/image
 
+#rm -rf $jqReleaseDir/dojo/dijit/themes/claro
 rm -rf $jqReleaseDir/dojo/dijit/themes/soria
 rm -rf $jqReleaseDir/dojo/dijit/themes/a11y
 rm -rf $jqReleaseDir/dojo/dijit/themes/nihilo
 rm -rf $jqReleaseDir/dojo/dijit/themes/noir
-#rm -rf $jqReleaseDir/dojo/dijit/themes/tundra
+rm -rf $jqReleaseDir/dojo/dijit/themes/tundra
 
 mv $jqReleaseDir/dojo/dijit/themes $jqReleaseDir/dojo/dijit-themes
 rm -rf $jqReleaseDir/dojo/dijit/*
