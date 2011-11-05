@@ -1,0 +1,1051 @@
+<html>
+<head>
+<!-- 
+// Copyright 2010 Alexander Schonfeld
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+-->
+	<title>Javascript Quant: Trend Following Algorithm Example</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="description" content="Javascript trend following algorithm example using Dojo, Flot and Yahoo Finance historical stock prices">
+	<link rel="icon" href="images/favicon16x16.ico" type="image/x-icon">
+	<link rel="shortcut icon" href="images/favicon16x16.ico" type="image/x-icon">
+	<style type="text/css">
+		/* USE REMOTE: */
+		@import "http://ajax.googleapis.com/ajax/libs/dojo/1.6.1/dijit/themes/claro/claro.css";
+		@import "http://ajax.googleapis.com/ajax/libs/dojo/1.6.1/dojo/resources/dojo.css";
+		@import "http://ajax.googleapis.com/ajax/libs/dojo/1.6.1/dojox/grid/resources/Grid.css";
+		@import "http://ajax.googleapis.com/ajax/libs/dojo/1.6.1/dojox/grid/resources/claroGrid.css";
+		/* USE LOCAL: */
+		/*
+		@import "js/release/dojo/dojo/resources/dojo.css";
+		@import "js/release/dojo/dojox/grid/resources/Grid.css";
+		@import "js/release/dojo/dojox/grid/resources/claroGrid.css";
+		@import "js/release/dojo/dijit/themes/claro/claro.css";
+		*/
+		.claro .dojoxGridSortNode {
+			background: none;
+			border: none;
+		}
+
+		html, body, #main {
+			width: 100%;
+			height: 100%;
+			overflow: hidden;
+			padding: 0 0 0 0;
+			margin: 0 0 0 0;
+			font: 10pt Arial,Myriad,Tahoma,Verdana,sans-serif;
+		}
+		form {
+			margin: 0;
+			display: inline;
+		}
+		#layoutSidebar {
+			width: 275px;
+			padding: 10px;
+		}
+		#layoutHeader {
+			padding: 15px 10px 3px 15px;
+		}
+		#layoutHeader .label {
+			margin-left: 10px;
+		}
+		#layoutFooter {
+			color: #ccc;
+		}
+		.sep {
+			border-top: 1px dotted #ccc;
+			margin: 20px 10px;
+		}
+		#logo {
+			font-size: 2.5em;
+			font-family: serif;
+			margin:0 10px;
+		}
+		#logoSubtext, .subtext, .index {
+			font-size: 0.8em;
+			color: #666;
+		}
+		#logoSubtext {
+			z-index: 1;
+			top: 5px;
+			left: 10px;
+			position: absolute;
+		}
+		.chart {
+			height: 400px;
+			cursor: pointer;
+		}
+		.chartOverview {
+			width: 250px;
+			height: 50px;
+			margin-bottom: 10px;
+			cursor: pointer;
+		}
+		.positive {
+			color: green;
+		}
+		.negative {
+			color: maroon;
+		}
+		#settingsDialog {
+			width: 450px;
+		}
+		#settingsDialog input, #settingsDialog textarea {
+			width: 100%;
+		}
+		#settingsDialog .buttons {
+			text-align: center;
+		}
+		#dateRange {
+			margin: 20px 0 10px 10px;
+		}
+		#portfolioStats {
+			border-collapse: collapse;
+			margin: 0 15px 40px 25px;
+		}
+		#portfolioStats th {
+			font-weight: bold;
+			background-color: #EEF;
+		}
+		#portfolioStats td, #portfolioStats th {
+			border: 1px solid #666;
+			padding: 5px;
+		}
+		#portfolioStats tr.footer {
+			font-weight: bold;
+			background-color: #EEE;
+		}
+		.adsense,.addthis_toolbox {
+			margin-left: 15px;
+		}
+		#loader {
+			padding: 0;
+			margin: 0;
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: white;
+			z-index: 999;
+			vertical-align: center;
+		}
+		#loaderInner {
+			position: relative;
+			left: 0;
+			top: 0;
+			padding:10px 25px;
+		}
+		/* From http://ejohn.org/blog/retweet/ */
+		a.retweet { font: 12px Helvetica,Arial; color: #000; text-decoration: none; border: 0px; }
+		a.retweet span { color: #FFF; background: #94CC3D; margin-left: 2px; border: 1px solid #43A52A; -moz-border-radius: 3px; -webkit-border-radius: 3px; border-radius: 3px; padding: 3px; }
+	</style>
+</head>
+<body class="claro">
+	<div id="loader" class="loader"><div id="loaderInner" class="dijitContentPaneLoading">Loading...</div></div>
+	<div id="main" data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="design:'headline', liveSplitters:false, persist:true">
+		<div id="layoutHeader" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region:'top', role:'banner'">
+			<span id="logo" title="Javascript Quant Example">JsQuant</span>
+			<span id="logoSubtext">100% Javascript Quant: Trend Following Algorithm Example (<a href="http://code.google.com/p/jsquant/">download source</a>)</span>
+			
+			<form id="portfolioForm">
+				<span class="label">Symbols</span>
+				<input id="symbolText" type="text" value="GOOG,AAPL,INTC" />
+				x
+				<span class="label">$</span>
+				<input id="principalText" type="text" value="1000" />
+	
+				<span class="label">From</span>
+				<select id="fromYearSelect"></select> 
+				<select id="fromMonthSelect"></select>
+				
+				<span class="label">Using</span>
+				<span data-dojo-type="dijit.form.DropDownButton">
+					<span>Algorithm...</span>
+					<div id="settingsDialog" data-dojo-type="dijit.TooltipDialog" style="display:none;">
+						<div class="label">Add Calculated Columns to Yahoo Finance CSV</div> 
+						<textarea id="calcColsText" rows="10" wrap="off">
+/* 
+Algorithm: 
+-----------------------------------------------------------------------------
+	BUY after All Time High Close
+	SELL after Close below trailing 10 day Average True Range
+	(see calculated Column 12 "Order Action")
+
+Format:
+-----------------------------------------------------------------------------
+	To calculate additional columns and update/normalize the Yahoo CSV data, 
+	a javascript list of two types of functions is used (listed below):
+		// UPDATE COLUMNS EXAMPLE:
+		[{ 
+			updateValues: function(allData) { 
+				// allData 2d array of rows: [[1,2],[3,4],[1,1], ... ]
+				allData.reverse(); 
+				return allData; 
+			} 
+		},
+		// ADD COLUMNS EXAMPLE:
+		{
+			// column header "names" are required for new columns, two names indicates two column to be added
+			names: ["some col 1", "some col to add 2"],
+			calculateValues: function(allData) {
+				dojo.forEach(allData, function(row) { 
+					row.push(1, 2); // add "1" and "2" as new col values to every row 
+				}); 
+				return allData;
+			}
+		}]
+
+Resultant Data:
+-----------------------------------------------------------------------------
+-- YAHOO FINANCE COLUMNS:
+0  Date
+1  Open
+2  High
+3  Low
+4  Close
+5  Volume
+6  Adj Close
+-- ADDED CALCULATED COLUMNS:
+7  Split
+8  All Time High Close
+9  True Range
+10 ATR10
+11 Stop At
+12 Order Action
+13 Bought At
+14 Sold At
+15 Close % Change
+16 Principal
+17 Cash
+18 Shares
+19 Value (Shares and Cash)
+20 % Change (Value vs Principal)
+21 Trades (Total number of Trades)
+
+Actual Functions to Apply Follow:
+-----------------------------------------------------------------------------
+*/
+
+[{ // filter incomplete rows, fix types and reverse order
+	updateValues: function(allData) {
+		//console.debug(this, allData[0], allData[allData.length-1]);
+		allData.reverse();
+		dojo.forEach(allData, function(row) {
+			var dateParts = row[0].split("-");
+			row[0] = new Date(Number(dateParts[0]), Number(dateParts[1])-1, Number(dateParts[2])); // dojo.date.locale.parse(row[0], {selector: "date", datePattern: "yyyy-MM-dd"});
+			for (var j=1; j&lt;row.length; j++) 
+				row[j] = Number(row[j]);
+		});
+		//console.debug(this, allData[0], allData[allData.length-1]);
+		return allData;
+	}
+},
+{ // COL 7 Split, add and normalize cols 1, 2, 3, 4
+	names: ["Split"],
+	calculateValues: function(allData) {
+		dojo.forEach(allData, function(row) {
+			var splt = row[6]/row[4];
+			if (splt != 1) {
+				row[1] = round(row[1] * splt);
+				row[2] = round(row[2] * splt);
+				row[3] = round(row[3] * splt);
+			}
+			row.push(round(splt, 3));
+		});
+		return allData;
+	}
+},
+{ // COL 8
+	names: ["All Time High Close"],
+	calculateValues: function(allData) {
+		var allTimeHighClose = 0;
+		dojo.forEach(allData, function(row) {
+			allTimeHighClose = Math.max(allTimeHighClose, row[6]);
+			row.push(allTimeHighClose);
+		}, this);
+		return allData;
+	}
+},
+{ // COL 9
+	names: ["True Range"],
+	calculateValues: function(allData) {
+		var row = [];
+		var prevRow = [];
+		allData[0].push(null);
+		for (var i=1; i&lt;allData.length; i++) {
+			prevRow = allData[i-1];
+			row = allData[i];
+			row.push(round(Math.max(row[2], prevRow[6])-Math.min(row[3], prevRow[6])));
+		}
+		return allData;
+	}
+},
+{ // COL 10
+	names: ["ATR10"],
+	calculateValues: function(allData) {
+		var row = [];
+		var avgTrueRng = null;
+		var rng = 10;
+		for (var i=0; i&lt;allData.length; i++) {
+			row = allData[i];
+			if (i &gt; rng-2) {
+				sumRng = 0;
+				dojo.forEach(allData.slice(i-rng+1,i), function(r) {
+					sumRng += r[9]; // sum True Range
+				}, this);
+				avgTrueRng = sumRng / rng;
+			}
+			row.push(round(avgTrueRng));
+		}
+		return allData;
+	}
+},
+{ // COL 11
+	names: ["Stop At"],
+	calculateValues: function(allData) {
+		var stopAt = null;
+		dojo.forEach(allData, function(row) {
+			// if have ATR10 and All Time High
+			if (row[10] &amp;&amp; row[6] == row[8])
+				stopAt = round(row[6]-row[10]); // set Stop At to Adj Close - ATR10
+			row.push(stopAt);
+		}, this);
+		return allData;
+	}
+},
+{ // COL 12
+	names: ["Order Action"],
+	calculateValues: function(allData) {
+		var row = [];
+		var prevAction = OrderAction.IGNORE;
+		var orderAction = null;
+		allData[0].push(prevAction);
+		for (var i=1; i&lt;allData.length; i++) {
+			row = allData[i];
+			var adjClose = row[6];
+			var allTimeHighClose = row[8];
+			var stopAt = row[11];
+			if (stopAt 
+					&amp;&amp; allTimeHighClose == adjClose 
+					&amp;&amp; prevAction == OrderAction.IGNORE 
+					) {
+				orderAction = OrderAction.BUY;
+			} else if (stopAt 
+					&amp;&amp; adjClose &lt; stopAt 
+					&amp;&amp; (prevAction == OrderAction.BUY || prevAction == OrderAction.HOLD) 
+					) {
+				orderAction = OrderAction.SELL;
+			} else if (prevAction == OrderAction.HOLD || prevAction == OrderAction.BUY) {
+				orderAction = OrderAction.HOLD;
+			} else {
+				orderAction = OrderAction.IGNORE;
+			}
+			row.push(orderAction);
+			prevAction = orderAction;
+		}
+		return allData;
+	}
+},
+{ // COL 13, 14, 15, 16, 17, 18, 19, 20, 21
+	names: ["Bought At","Sold At","Close % Change","Principal","Cash","Shares","Value","% Change","Trades"],
+	calculateValues: function(allData) {
+		var closeAt = null;
+		var boughtAt = null;
+		var soldAt = null;
+		var orderAction = null;
+		var principal = Number(dojo.byId("principalText").value);
+		var cash = principal;
+		var shares = 0;
+		var value = 0;
+		var tradeCount = 0;
+		dojo.forEach(allData, function(row) {
+			closeAt = row[6];
+			orderAction = row[12];
+			if (orderAction == OrderAction.BUY) {
+				boughtAt = closeAt;
+				shares = truncate(cash / boughtAt);
+				cash = round(cash - boughtAt * shares);
+				row.push(boughtAt, null, null);
+				tradeCount += 1;
+			} else if (orderAction == OrderAction.SELL) {
+				soldAt = closeAt;
+				cash = round(cash + soldAt * shares);
+				shares = 0;
+				row.push(boughtAt, soldAt, round((soldAt-boughtAt)/boughtAt*100));
+				tradeCount += 1;
+			} else {
+				row.push(boughtAt, null, null);
+			}
+			value = round(cash+(shares*closeAt));
+			row.push(principal, cash, shares, value,
+				round(((value-principal)/principal)*100), // % change
+				tradeCount);
+		}, this);
+		return allData;
+	}
+}]
+						</textarea>
+						<div class="label">Graph Columns</div> 
+						<input id="graphColsText" type="text" value="8,11,6" />
+						<div class="label">Result Columns</div> 
+						<input id="resultColsText" type="text" value="19,20" />
+						<div class="buttons">
+							<button data-dojo-props="type:'submit'" data-dojo-type="dijit.form.Button">Update</button>
+						</div>
+					</div>
+				</span>
+	
+				<input id="updateButton" type="submit" value="GO" class="label" />
+			</form>
+		</div>
+
+		<div id="layoutSidebar" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region:'left', role:'navigation', splitter:true">
+			<div id="dateRange"></div>
+			<div class="subtext" style="margin: 10px 20px 20px 20px">Balance after trading period using algorithm...</div>
+			
+			<table id="portfolioStats">
+				<thead>
+				</thead>
+				<tbody>
+				<tr><td><div class="dijitContentPaneLoading">Loading...</div></td></tr>
+				</tbody>
+			</table>
+
+			<div>
+				
+			</div>
+
+			<div class="addthis_toolbox addthis_default_style">
+				<a href="http://www.addthis.com/bookmark.php?v=250&amp;username=xa-4c078433646dc4f9" class="addthis_button_compact"></a>
+				<a class="addthis_button_facebook"></a>
+				<a class="addthis_button_twitter"></a>
+				<a target="_blank" href="http://twitter.com/home?status=100%25%20Javascript%20Quant%3A%20trend%20following%20algorithm%20example%20http%3A%2F%2Fjsquant.com"
+					>tweet me!</a>
+				<a target="_blank" class="retweet" href="http://twitter.com/home?status=100%25%20Javascript%20Quant%3A%20trend%20following%20algorithm%20example%20http%3A%2F%2Fjsquant.com"></a>
+			</div>
+			<script type="text/javascript">
+				var addthis_config = { data_use_flash: false, data_use_cookies: false };
+			</script>
+			<script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#username=xa-4c078433646dc4f9"></script>
+
+			<div class="sep"></div>
+
+			<div class="adsense">
+				<script type="text/javascript">
+					google_ad_client = "pub-5826708802622564";
+					google_ad_slot = "1849522828";
+					google_ad_width = 234;
+					google_ad_height = 60;
+				</script>
+				<script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script>
+			</div>
+		</div>
+
+		<div id="portfolioTabs" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region:'center', role:'main'">
+		</div>
+
+		<div id="layoutFooter" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region:'bottom'">
+			Powered by 
+			<!-- Begin Yahoo Web Services HTML Attribution Snippet -->
+			<a href="http://developer.yahoo.com/">Web Services by Yahoo!</a>
+			<!-- End Yahoo Web Services HTML Attribution Snippet --> 
+			<a href="http://dojotoolkit.org">Dojo Toolkit</a>, 
+			<a href="http://code.google.com/p/flot/">Flot Charts</a>,
+			 &copy; <span id="copyrightYear">2010</span> Alexander Schonfeld
+		</div>
+	</div>
+</body>
+
+<!-- USE REMOTE: -->
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/dojo/1.6.1/dojo/dojo.xd.js" data-dojo-config="parseOnLoad: true, isDebug: false"></script>
+<!-- USE LOCAL: -->
+<!--<script type="text/javascript" src="js/release/dojo/dojo/dojo.js" data-dojo-config="parseOnLoad: true, isDebug: false"></script>-->
+<!--<script type="text/javascript" src="js/release/dojo/dojo/jsquant-all.js"></script>-->
+
+<!-- USE LOCAL: -->
+<!--[if IE]><script language="javascript" type="text/javascript" src="js/flot/excanvas.min.js"></script><![endif]-->
+<script language="javascript" type="text/javascript" src="js/flot/jquery.min.js"></script>
+<script language="javascript" type="text/javascript" src="js/flot/jquery.flot.min.js"></script>
+<script language="javascript" type="text/javascript" src="js/flot/jquery.flot.selection.min.js"></script>
+
+<script>
+// USE REMOTE:
+dojo.require("dojo.DeferredList");
+dojo.require("dojo.number");
+dojo.require("dojo.date.locale");
+dojo.require("dojo.io.script");
+dojo.require("dijit.TooltipDialog");
+dojo.require("dijit.layout.BorderContainer");
+dojo.require("dijit.layout.TabContainer");
+dojo.require("dijit.layout.ContentPane");
+dojo.require("dijit.form.DropDownButton");
+dojo.require("dijit.Menu");
+dojo.require("dojox.widget.PlaceholderMenuItem");
+dojo.require("dojox.analytics.Urchin");
+dojo.require("dojox.data.CsvStore");
+dojo.require("dojox.grid.DataGrid");
+dojo.require("dojox.lang.functional");
+dojo.require("dojo.parser");
+
+// Globals
+var yahooApplicationId = "JzXVLI38";
+var today = new Date();
+// Enums
+var OrderAction = {
+		IGNORE:"IGNORE",
+		BUY:"BUY",
+		HOLD:"HOLD",
+		SELL:"SELL"
+};
+// Utility Functions
+var truncate = function(n) {
+	return n | 0; // bitwise op converts operands to integers
+};
+var round = function(num, places) {
+	return num == null ? null 
+			: dojo.number.round(num, places ? places : 2);
+};
+var lpad = function(val, padToLength, padWithStr) {
+	var s = val.toString();
+	for (var i=s.length+padWithStr.length; i<=padToLength; i+=padWithStr.length)
+		s = padWithStr + s;
+	return s;
+ };
+var isNumber = function(n) {
+	return !isNaN(parseFloat(n)) && isFinite(n);
+};
+var dateFormatter = function(dateValue) {
+	return dojo.date.locale.format(dateValue, {selector:"date", formatLength:"short"});
+};
+// Main functions
+var addToPortfolio = function(symData, calcCols, graphCols, resultCols) {
+	var tabs = dijit.byId("portfolioTabs");
+
+	var gridMenu = new dijit.Menu();
+	gridMenu.addChild(new dojox.widget.PlaceholderMenuItem({label:"GridColumns"})); 
+	var grid = new dojox.grid.DataGrid({
+		query: {},
+		rowsPerPage: 40,
+		style: "width: 450px;", region:"left", splitter:true,
+		headerMenu: gridMenu});
+
+	var cpChart = new dijit.layout.ContentPane({title:"Chart", region:"center"});
+
+	var bcTab = new dijit.layout.BorderContainer({title: symData.symbol, closable: true, liveSplitters: false, persist: true });
+	bcTab.addChild(grid);
+	bcTab.addChild(cpChart);
+	bcTab.startup();
+
+	tabs.addChild(bcTab);
+
+	// Example: http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20csv%20where%20url%3D'http%3A%2F%2Fichart.finance.yahoo.com%2Ftable.csv%3Fa%3D00%26b%3D01%26c%3D2010%26d%3D05%26e%3D03%26f%3D2010%26g%3Dd%26s%3DGOOG%26ignore%3D.csv'&format=json&diagnostics=true&callback=cbfunc
+	var yahooFinanceQuery = "?a="+encodeURIComponent(lpad(symData.fromDate.getMonth(),2,"0"))
+		+"&b="+encodeURIComponent(lpad(symData.fromDate.getDate(),2,"0"))
+		+"&c="+encodeURIComponent(symData.fromDate.getFullYear())
+		+"&d="+encodeURIComponent(lpad(symData.toDate.getMonth(),2,"0"))
+		+"&e="+encodeURIComponent(lpad(symData.toDate.getDate(),2,"0"))
+		+"&f="+encodeURIComponent(symData.toDate.getFullYear())
+		+"&g=d" // "d"ay "w"eek "m"onth resolution
+		+"&s="+encodeURIComponent(symData.symbol)
+		+"&ignore=.csv";
+
+	// USE LOCAL: local java proxy to CSV (requires local java webapp)
+	//var localProxyDataUrl = "jsquant/YahooFinanceProxy"+yahooFinanceQuery;
+	//var store = new jsquant.CsvYqlStore({url:localProxyDataUrl, calcCols:calcCols});
+	// USE REMOTE: YQL JSON proxy (all javascript) http://developer.yahoo.com/yql/
+	var yahooFinanceDataUrl = "http://ichart.finance.yahoo.com/table.csv"+yahooFinanceQuery;
+	var yqlQuery = "select * from csv where url = '"+yahooFinanceDataUrl+"'";
+	var store = new jsquant.CsvYqlStore({yqlQuery:yqlQuery, yahooApplicationId:yahooApplicationId, calcCols:calcCols});
+
+	store.fetch({
+		query: {Date:"*"},
+		sort: [{attribute: "Date", descending: false}],
+		onComplete: function(items, request){
+			var periodData = store._dataArray; // TODO: add accessor methods
+			var colNames = store._attributes; // TODO: add accessor methods
+			
+			var layoutFields = dojo.map(colNames, function(item, index) {
+				return {
+					field: item,
+					name: item+" <span class='index'>["+index.toString()+"]</span>",
+					width: 5
+				};
+			});
+			layoutFields[0]["formatter"] = dateFormatter;
+			grid.attr("structure", [layoutFields]);
+			grid.setStore(store, {});
+
+			// Update chart
+			var seriesData = dojo.map(graphCols, function(colNum) {
+				return dojo.map(periodData, function(item) {
+					return [item[0], item[colNum]];
+				});
+			}, this);
+			var chartId = "chart"+symData.index;
+			var chartOverviewId = "chartOverview"+symData.index;
+			var chartContainerId = "chartContainer"+symData.index;
+			var chartContainer = dojo.create("div", {"id": chartContainerId, "class":"chartContainer", title: "Select to zoom on range..."}, dojo.body());
+			var chartOverviewDiv = dojo.create("div", {"id": chartOverviewId, "class":"chartOverview", title: "Select to zoom on range..."}, chartContainer);
+			var chartDiv = dojo.create("div", {"id": chartId, "class":"chart"}, chartContainer);
+			tabs.selectChild(bcTab);
+			cpChart.attr("content", chartContainer);
+
+			// Source from Flot: "examples/visitors.html"
+			// ----------------------------------------------------------------
+			// helper for returning the weekends in a period
+			function weekendAreas(axes) {
+				var markings = [];
+				var d = new Date(axes.xaxis.min);
+				// go to the first Saturday
+				d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 1) % 7))
+				d.setUTCSeconds(0);
+				d.setUTCMinutes(0);
+				d.setUTCHours(0);
+				var i = d.getTime();
+				do {
+					// when we don't set yaxis, the rectangle automatically
+					// extends to infinity upwards and downwards
+					markings.push({ xaxis: { from: i, to: i + 2 * 24 * 60 * 60 * 1000 } });
+					i += 7 * 24 * 60 * 60 * 1000;
+				} while (i < axes.xaxis.max);
+				return markings;
+			}
+			var chartOptions = {
+				xaxis: { mode: "time", tickLength: 5 },
+				selection: { mode: "x" },
+				grid: { markings: weekendAreas }
+			};
+			var chart = $.plot($("#"+chartId), seriesData, chartOptions);
+			var chartOverview = $.plot($("#"+chartOverviewId), seriesData, {
+				series: {
+					lines: { show: true, lineWidth: 1 },
+					shadowSize: 0
+				},
+				xaxis: { ticks: [], mode: "time" },
+				yaxis: { ticks: [], min: 0, autoscaleMargin: 0.1 },
+				selection: { mode: "x" }
+			});
+			// now connect the two
+			$("#"+chartId).bind("plotselected", function (event, ranges) {
+				// do the zooming
+				chart = $.plot($("#"+chartId), seriesData,
+							$.extend(true, {}, chartOptions, {
+								xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to }
+							}));
+				// don't fire event on the overview to prevent eternal loop
+				chartOverview.setSelection(ranges, true);
+			});
+			$("#"+chartOverviewId).bind("plotselected", function (event, ranges) {
+				chart.setSelection(ranges);
+			});
+			// ----------------------------------------------------------------
+
+			// Update symbol data
+			symData.resultColNames = dojo.map(resultCols, function(colIndex) { return colNames[colIndex]; }, this);
+			symData.resultColValues = dojo.map(resultCols, function(colIndex) { return periodData[periodData.length-1][colIndex]; }, this);
+			symData.rowCount = periodData.length;
+			
+			// Notify complete
+			symData.deferred.callback(symData.symbol);
+		},
+		onError:function(errorData, request) {
+			console.log(errorData, request);
+			bcTab.addChild(new dijit.layout.ContentPane({title:"Error", region:"top", 
+				content:"Error Loading Data for Symbol: '"+symData.symbol+"'<br>"+errorData, style:"color:red;"}));
+			// Notify complete
+			symData.deferred.callback(symData.symbol);
+		}
+	});
+};
+
+var updateAll = function(e) {
+	if (e) e.preventDefault(); // stop form submit
+	
+	var portfolioData = dojo.map(dojo.byId("symbolText").value.split(","), 
+			function(item) { return { symbol: dojo.trim(item).toUpperCase() } });
+	portfolioData = dojo.filter(portfolioData, function(symData) { return symData.symbol.length > 1; });
+	var fromDate = new Date(dojo.byId("fromYearSelect").value, dojo.byId("fromMonthSelect").value, 1);
+	var toDate = today;
+
+	var tabs = dijit.byId("portfolioTabs");
+	tabs.destroyDescendants();
+
+	var deferreds = []; // list of deferred tasks (one for each symbol data load)
+	dojo.forEach(portfolioData, function(symData, index, arr) {
+		symData.index = index;
+		symData.fromDate = fromDate;
+		symData.toDate = toDate;
+		symData.deferred = new dojo.Deferred();
+		deferreds.push(symData.deferred);
+		addToPortfolio(symData, 
+				dojo.eval(dojo.byId("calcColsText").value),
+				dojo.eval("["+dojo.byId("graphColsText").value+"]"),
+				dojo.eval("["+dojo.byId("resultColsText").value+"]"));
+	}, this);
+
+	var deferList = dojo.DeferredList.prototype.gatherResults(deferreds);
+	// final callback made when all deferreds have made their notify complete callbacks:
+	deferList.addCallback(function(res) {
+		// Update portfolio stats
+		dojo.byId("dateRange").innerHTML = "Results "+dojo.date.locale.format(fromDate, 
+				{selector:"date", formatLength:"long"})+"〜"
+		dojo.query("#portfolioStats > thead > tr").orphan();
+		dojo.query("#portfolioStats > tbody > tr").orphan();
+		if (portfolioData) {
+			dojo.forEach(dojo.query("#portfolioStats > thead"), function(node) {
+				var tr = dojo.create("tr", {}, node);
+				dojo.create("th", {innerHTML:"Symbol"}, tr);
+				dojo.forEach(portfolioData[0].resultColNames, function(colName) {
+					dojo.create("th", {innerHTML:colName}, tr);
+				}, this);
+			}, this);
+			var principal = Number(dojo.byId("principalText").value);
+			dojo.forEach(dojo.query("#portfolioStats > tbody"), function(node) {
+				dojo.forEach(portfolioData, function(symData) {
+					if (symData.rowCount) {
+						var tr = dojo.create("tr", {}, node);
+						dojo.create("td", {innerHTML:symData.symbol}, tr);
+						dojo.forEach(symData.resultColValues, function(colValue, index) {
+							dojo.create("td", {innerHTML:colValue.toString(), 
+								"class": index == 0 ? (colValue >= principal ? "positive" : "negative") 
+										: (index == 1 ? (colValue >= 0 ? "positive" : "negative") 
+												: "")}, tr);
+						}, this);
+					}
+				}, this);
+			}, this);
+		}
+		return res;
+	});
+	return false;
+};
+
+dojo.addOnLoad(function() {
+	var curYear = today.getFullYear();
+
+	dojo.byId("copyrightYear").innerHTML = curYear;
+
+	dojo.query(".retweet").addContent(dojo.create("span", { 
+		innerHTML: (/windows/i.test( navigator.userAgent) ? "&#9658;" : "&#9851;") + "&nbsp;Retweet" }));
+
+	var select = dojo.byId("fromMonthSelect");
+	for (var i=0; i<12; i++)
+		dojo.create("option", { value: i, innerHTML: i+1 }, select);
+
+	select = dojo.byId("fromYearSelect");
+	for (var i=curYear-10; i<=curYear; i++) {
+		var op = dojo.create("option", { value: i, innerHTML: i }, select);
+		if (i == (curYear-1))
+			dojo.attr(op, "selected", "selected");
+	}
+
+	// Child of CsvStore that calculates and normalizes data using functions in calcCols arg
+	// also supports reading from YQL JSONified CSV data source in addition to regular CSV URL
+	// Example:
+	// 		var store = new jsquant.CsvYqlStore({url:"jsquant/YahooFinanceProxy"+yahooFinanceQuery, calcCols:calcCols});
+	// 		var store = new jsquant.CsvYqlStore({yqlQuery:"select * from csv where url = 'http://finance...'", calcCols:calcCols});
+	dojo.declare("jsquant.CsvYqlStore", dojox.data.CsvStore, {
+		// Portions of overridden methods below Copyright (c) 2010, The Dojo Foundation
+		// http://archive.dojotoolkit.org/nightly/dojotoolkit/dojox/LICENSE
+		_calcCols: [],
+		_jsonpArgs: {
+			url: "http://query.yahooapis.com/v1/public/yql",
+			jsonp: "callback",
+			content: {
+				// q: "select * from csv where url = 'http://finance...'",
+				format: "json",
+				diagnostics: true
+			}
+		},
+		
+		
+		constructor: function(args) {
+			dojo.mixin(this, args);
+			this._calcCols = args.calcCols;
+			if (args.yqlQuery)
+				this._jsonpArgs.content.q = args.yqlQuery;
+			if (args.yahooApplicationId)
+				this._jsonpArgs.content.applicationId = args.yahooApplicationId;
+		},
+
+		_calculateValues: function() {
+			dojo.forEach(this._calcCols, function(item) {
+				if (item.calculateValues) {
+					dojo.forEach(item.names, function(name) {
+						this._attributes.push(name);
+						this._attributeIndexes[name] = this._attributes.length-1;
+					}, this);
+					this._dataArray = item.calculateValues(this._dataArray);
+				} else if (item.updateValues) {
+					this._dataArray = item.updateValues(this._dataArray);
+				}
+			}, this);
+		},
+		
+		// override parsing to add calculated columns
+		_getArrayOfArraysFromCsvFileContents: function(/* string */ csvFileContents){
+			// summary:
+			//		Parses a string of CSV records into a nested array structure.
+			// example:
+			//		For example, given this CSV string as input:
+			//			"Title, Year, Producer \n Alien, 1979, Ridley Scott \n Blade Runner, 1982, Ridley Scott"
+			//		this._dataArray will be set to:
+			//			[["Alien", "1979", "Ridley Scott"],
+			//			["Blade Runner", "1982", "Ridley Scott"]]
+			//		And this._attributes will be set to:
+			//			["Title", "Year", "Producer"]
+			//		And this._attributeIndexes will be set to:
+			//			{ "Title":0, "Year":1, "Producer":2 }
+			this.inherited(arguments);
+			this._calculateValues();
+		},
+		
+		_processJsonpData: function(/* JSON */ data){
+			// summary:
+			//		Function for processing the YQL JSON data.
+			//		Similar to _processData in parent.
+			// data: JSON
+			//		The JSON CSV row data in YQL query result format.
+			// tags:
+			//		private
+			var rows = data.query.results.row;
+			var oUtil = dojox.lang.functional;
+
+			this._dataArray = [];
+			for (var i=1; i<rows.length; i++) 
+				this._dataArray.push(oUtil.values(rows[i]));
+			this._attributes = oUtil.values(rows[0]);
+			this._attributeIndexes = {};
+			dojo.forEach(this._attributes, function(item, index) {
+				this._attributeIndexes[item] = index; 
+			}, this);
+			this._calculateValues();
+			this._arrayOfAllItems = [];
+
+			//Check that the specified Identifier is actually a column title, if provided.
+			if(this.identifier){
+				if(this._attributeIndexes[this.identifier] === undefined){
+					throw new Error(this.declaredClass + ": Identity specified is not a column header in the data set.");
+				}
+			}
+
+			for(var i=0; i<this._dataArray.length; i++){
+				var id = i;
+				//Associate the identifier to a row in this case
+				//for o(1) lookup.
+				if(this.identifier){
+					var iData = this._dataArray[i];
+					id = iData[this._attributeIndexes[this.identifier]];
+					this._idMap[id] = i;
+				}
+				this._arrayOfAllItems.push(this._createItemFromIdentity(id));
+			}
+			this._loadFinished = true;
+			this._loadInProgress = false;
+		},
+		
+		// The dojo.data.api.Read.fetch() function is implemented as
+		// a mixin from dojo.data.util.simpleFetch.
+		// That mixin requires us to define _fetchItems().
+		_fetchItems: function(	/* Object */ keywordArgs, 
+								/* Function */ findCallback, 
+								/* Function */ errorCallback){
+			// summary: 
+			//		See dojo.data.util.simpleFetch.fetch()
+			// tags:
+			//		protected
+			var self = this;
+			var filter = function(requestArgs, arrayOfAllItems){
+				var items = null;
+				if(requestArgs.query){
+					var key, value;
+					items = [];
+					var ignoreCase = requestArgs.queryOptions ? requestArgs.queryOptions.ignoreCase : false; 
+
+					//See if there are any string values that can be regexp parsed first to avoid multiple regexp gens on the
+					//same value for each item examined.  Much more efficient.
+					var regexpList = {};
+					for(key in requestArgs.query){
+						value = requestArgs.query[key];
+						if(typeof value === "string"){
+							regexpList[key] = dojo.data.util.filter.patternToRegExp(value, ignoreCase);
+						}
+					}
+
+					for(var i = 0; i < arrayOfAllItems.length; ++i){
+						var match = true;
+						var candidateItem = arrayOfAllItems[i];
+						for(key in requestArgs.query){
+							value = requestArgs.query[key];
+							if(!self._containsValue(candidateItem, key, value, regexpList[key])){
+								match = false;
+							}
+						}
+						if(match){
+							items.push(candidateItem);
+						}
+					}
+				}else{
+					// We want a copy to pass back in case the parent wishes to sort the array.  We shouldn't allow resort 
+					// of the internal list so that multiple callers can get lists and sort without affecting each other.
+					items = arrayOfAllItems.slice(0,arrayOfAllItems.length); 
+					
+				}
+				findCallback(items, requestArgs);
+			};
+
+			if(this._loadFinished){
+				filter(keywordArgs, this._arrayOfAllItems);
+			}else{
+				// START JSQUANT ADDITION, similar to below, but using dojo.io.script.get for XD
+				if(this._jsonpArgs.content.q){
+					if(this._loadInProgress){
+						this._queuedFetches.push({args: keywordArgs, filter: filter});
+					}else{
+						this._loadInProgress = true;
+						var getArgs = this._jsonpArgs;
+						getArgs.load = function(data){
+							try{
+								self._processJsonpData(data);
+								filter(keywordArgs, self._arrayOfAllItems);
+								self._handleQueuedFetches();
+							}catch(e){
+								errorCallback(e, keywordArgs);
+							}
+						};
+						getArgs.error = function(error){
+							self._loadInProgress = false;
+							if(errorCallback){
+								errorCallback(error, keywordArgs);
+							}else{
+								throw error;
+							}
+						};
+						// TODO: test abort
+						var getHandler = dojo.io.script.get(getArgs);
+						var oldAbort = null;
+						if(keywordArgs.abort){
+							oldAbort = keywordArgs.abort;
+						}
+						keywordArgs.abort = function(){
+							var df = getHandler;
+							if(df && df.fired === -1){
+								df.cancel();
+								df = null;
+							}
+							if(oldAbort){
+								oldAbort.call(keywordArgs);
+							}
+						};
+					}
+				// END JSQUANT ADDITION ----------------------------------------------
+				} else if(this.url !== ""){
+					//If fetches come in before the loading has finished, but while
+					//a load is in progress, we have to defer the fetching to be 
+					//invoked in the callback.
+					if(this._loadInProgress){
+						this._queuedFetches.push({args: keywordArgs, filter: filter});
+					}else{
+						this._loadInProgress = true;
+						var getArgs = {
+								url: self.url, 
+								handleAs: "text",
+								preventCache: self.urlPreventCache
+							};
+						var getHandler = dojo.xhrGet(getArgs);
+						getHandler.addCallback(function(data){
+							try{
+								self._processData(data);
+								filter(keywordArgs, self._arrayOfAllItems);
+								self._handleQueuedFetches();
+							}catch(e){
+								errorCallback(e, keywordArgs);
+							}
+						});
+						getHandler.addErrback(function(error){
+							self._loadInProgress = false;
+							if(errorCallback){
+								errorCallback(error, keywordArgs);
+							}else{
+								throw error;
+							}
+						});
+						//Wire up the cancel to abort of the request
+						//This call cancel on the deferred if it hasn't been called
+						//yet and then will chain to the simple abort of the
+						//simpleFetch keywordArgs
+						var oldAbort = null;
+						if(keywordArgs.abort){
+							oldAbort = keywordArgs.abort;
+						}
+						keywordArgs.abort = function(){
+							var df = getHandler;
+							if(df && df.fired === -1){
+								df.cancel();
+								df = null;
+							}
+							if(oldAbort){
+								oldAbort.call(keywordArgs);
+							}
+						};
+					}
+				}else if(this._csvData){
+					try{
+						this._processData(this._csvData);
+						this._csvData = null;
+						filter(keywordArgs, this._arrayOfAllItems);
+					}catch(e){
+						errorCallback(e, keywordArgs);
+					}
+				}else{
+					var error = new Error(this.declaredClass + ": No CSV source data was provided as either URL or String data input.");
+					if(errorCallback){
+						errorCallback(error, keywordArgs);
+					}else{
+						throw error;
+					}
+				}
+			}
+		}
+	});
+
+	
+	dojo.connect(dojo.byId("portfolioForm"), "onsubmit", updateAll);
+	dojo.connect(dijit.byId("settingsDialog"), "execute", function() {
+		console.debug(dojo.eval(dojo.byId("calcColsText").value));
+		console.debug(dojo.eval("["+dojo.byId("graphColsText").value+"]"));
+		console.debug(dojo.eval("["+dojo.byId("resultColsText").value+"]"));
+		// TODO: save to cookies
+		//dojo.cookie("calcCols", dojo.byId("calcColsText").value, {expires:120});
+		//dojo.global.alert("Settings saved.");
+		updateAll();
+	});
+});
+dojo.addOnLoad(function() { 
+	dojo.destroy("loader");
+	/* Fade In:
+	dojo.destroy("loaderInner");
+	dojo.fadeOut({ node: dojo.byId("loader"), duration:500,
+		onEnd: function() { dojo.destroy("loader"); }
+	}).play();
+	*/
+});
+dojo.addOnLoad(updateAll);
+dojo.addOnLoad(function() { 
+	new dojox.analytics.Urchin({ acct:"UA-187761-5" });
+});
+
+</script>
+</html>
